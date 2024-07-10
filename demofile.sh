@@ -151,6 +151,7 @@ sudo chown -f -R devtron ~/.kube
     microk8s enable dns 
     microk8s enable storage
     microk8s enable helm
+    microk8s enable ingress
     echo "                        "
     echo "============== CREATING A NAMESPACE devtron-ci, devtron-cd, devtron-demo =========================================="
     echo "                        "
