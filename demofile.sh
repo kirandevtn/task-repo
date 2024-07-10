@@ -197,7 +197,7 @@ echo "                        "
 sshpass -p $PASSWORD scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no devtron@$PUBLIC_IP:/home/devtron/bearerToken.txt .
 bearerToken=$(cat ./bearerToken.txt | grep "TOKEN" | awk -F ' := ' '{print $2}')
 echo "Bearer Token: $bearerToken"
-set -ex
+
 dashboardUrl=$dashboardUrl
 devtronApiToken=$devtronApiToken
 clusterData=$(curl -s "${dashboardUrl}/orchestrator/cluster" -H "token: $devtronApiToken")
