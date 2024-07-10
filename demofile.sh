@@ -13,193 +13,194 @@ aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
 aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 aws configure set region "$REGION"
 
-CONFIG=m5a.large #cpu 2, memory 8    "default config"
-if [[ "$VM_CPU" == "4" ]]; then
-    CONFIG="m6a.xlarge"             #cpu 4, memory 16
-elif [[ "$size" == "8" ]]; then
-    CONFIG="m6a.2xlarge"            #cpu 8, memory 16
-fi
+# CONFIG=m5a.large #cpu 2, memory 8    "default config"
+# if [[ "$VM_CPU" == "4" ]]; then
+#     CONFIG="m6a.xlarge"             #cpu 4, memory 16
+# elif [[ "$size" == "8" ]]; then
+#     CONFIG="m6a.2xlarge"            #cpu 8, memory 16
+# fi
 
-echo "========== TYPE OF INSTANCE  ============="
-echo "                        "
-echo "Instance to be launched: $CONFIG..."
+# echo "========== TYPE OF INSTANCE  ============="
+# echo "                        "
+# echo "Instance to be launched: $CONFIG..."
 
-# Function to list all EC2 instances
-list_ec2_instances() {
-    aws ec2 describe-instances --region ${REGION} --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0]]' --output table
-}
+# # Function to list all EC2 instances
+# list_ec2_instances() {
+#     aws ec2 describe-instances --region ${REGION} --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0]]' --output table
+# }
 
-# Creating a random pasword for devtron user.
-PASSWORD=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c15 ; echo -n '!@#$%&' )
-echo "Password of the instance is: $PASSWORD"
+# # Creating a random pasword for devtron user.
+# PASSWORD=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c15 ; echo -n '!@#$%&' )
+# echo "Password of the instance is: $PASSWORD"
 
-# Function to launch a new EC2 instance
-launch_ec2_instance() {
+# # Function to launch a new EC2 instance
+# launch_ec2_instance() {
 
-    # Variables (Replace with your actual values)
-    INSTANCE_TYPE=$CONFIG
+#     # Variables (Replace with your actual values)
+#     INSTANCE_TYPE=$CONFIG
 
-    OWNER=$EMAIL_ID
-    echo "================LAUNCHING AN EC2 INSTANCE ==============="
-    echo "                        "
+#     OWNER=$EMAIL_ID
+#     echo "================LAUNCHING AN EC2 INSTANCE ==============="
+#     echo "                        "
 
-    echo "Launching EC2 instance with name: $INSTANCE_NAME..."
+#     echo "Launching EC2 instance with name: $INSTANCE_NAME..."
 
 
-    # User data script to enable password authentication, install the microk8s and other required setup
-    USER_DATA=$(cat <<EOF
-#!/bin/bash
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/Include/#Include/' /etc/ssh/sshd_config
-adduser --disabled-password --gecos "" devtron
-echo "export PASSWORD='$PASSWORD'" >> ~/.bashrc
-source ~/.bashrc
-echo "devtron:$PASSWORD" | chpasswd
-echo "devtron ALL=(ALL) NOPASSWD: ALL" | sudo EDITOR='tee -a' visudo
-sudo -u devtron -i <<'EOF'
-EOF
-)
+#     # User data script to enable password authentication, install the microk8s and other required setup
+#     USER_DATA=$(cat <<EOF
+# #!/bin/bash
+# sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# sed -i 's/Include/#Include/' /etc/ssh/sshd_config
+# adduser --disabled-password --gecos "" devtron
+# echo "export PASSWORD='$PASSWORD'" >> ~/.bashrc
+# source ~/.bashrc
+# echo "devtron:$PASSWORD" | chpasswd
+# echo "devtron ALL=(ALL) NOPASSWD: ALL" | sudo EDITOR='tee -a' visudo
+# sudo -u devtron -i <<'EOF'
+# EOF
+# )
 
-    # Launch EC2 spot node instance
-    INSTANCE_ID=$(aws ec2 run-instances \
-        --image-id $AMI_ID \
-        --instance-type $INSTANCE_TYPE \
-        --key-name $KEY_NAME \
-        --region ${REGION} \
-        --subnet-id $SUBNET_ID \
-        --security-group-ids $SECURITY_GROUP_ID \
-        --user-data "$USER_DATA" \
-        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME},{Key=team,Value=$TEAM},{Key=environment,Value=$ENVIRONMENT},{Key=owner,Value=$OWNER},{Key=autoShutdown,Value=$AUTOSHUTDOWN},{Key=provisioned-by,Value=$PROVISIONED_BY}]" \
-        --instance-market-options "MarketType=spot,SpotOptions={SpotInstanceType=persistent,InstanceInterruptionBehavior=stop}" \
-        --query 'Instances[0].InstanceId' \
-        --output text)
+#     # Launch EC2 spot node instance
+#     INSTANCE_ID=$(aws ec2 run-instances \
+#         --image-id $AMI_ID \
+#         --instance-type $INSTANCE_TYPE \
+#         --key-name $KEY_NAME \
+#         --region ${REGION} \
+#         --subnet-id $SUBNET_ID \
+#         --security-group-ids $SECURITY_GROUP_ID \
+#         --user-data "$USER_DATA" \
+#         --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME},{Key=team,Value=$TEAM},{Key=environment,Value=$ENVIRONMENT},{Key=owner,Value=$OWNER},{Key=autoShutdown,Value=$AUTOSHUTDOWN},{Key=provisioned-by,Value=$PROVISIONED_BY}]" \
+#         --instance-market-options "MarketType=spot,SpotOptions={SpotInstanceType=persistent,InstanceInterruptionBehavior=stop}" \
+#         --query 'Instances[0].InstanceId' \
+#         --output text)
 
-    if [ $? -ne 0 ]; then
-        echo "Failed to launch EC2 instance."
-        exit 1
-    fi
+#     if [ $? -ne 0 ]; then
+#         echo "Failed to launch EC2 instance."
+#         exit 1
+#     fi
 
-    echo "EC2 instance launched successfully with Instance ID: $INSTANCE_ID"
-    echo "                        "
-}
+#     echo "EC2 instance launched successfully with Instance ID: $INSTANCE_ID"
+#     echo "                        "
+# }
 
-echo "========== Listing all VM already Present ============="
-echo "                        "
-list_ec2_instances
-echo "                        "
+# echo "========== Listing all VM already Present ============="
+# echo "                        "
+# list_ec2_instances
+# echo "                        "
 
-echo "================YOUR EMAIL ADDRESS ==============="
-echo "                        "
-echo "$EMAIL_ID"
+# echo "================YOUR EMAIL ADDRESS ==============="
+# echo "                        "
+# echo "$EMAIL_ID"
  
-# Check the email valid or not.
-if [[ $EMAIL_ID == *@devtron.ai ]]; then
-  echo "Valid email address"
-else
-  echo "Invalid email address"
-  exit
-fi
-echo "                        "
+# # Check the email valid or not.
+# if [[ $EMAIL_ID == *@devtron.ai ]]; then
+#   echo "Valid email address"
+# else
+#   echo "Invalid email address"
+#   exit
+# fi
+# echo "                        "
 
-# Generate the instance name from the email id
-INSTANCE_NAME=$(echo "$EMAIL_ID" | tr "@" "-")
+# # Generate the instance name from the email id
+# INSTANCE_NAME=$(echo "$EMAIL_ID" | tr "@" "-")
 
-# Call function to launch an spot instance
-launch_ec2_instance
+# # Call function to launch an spot instance
+# launch_ec2_instance
 
-# Allocation an elastic ip
-echo "================LAUNCING AN ELASTIC IP==============="
-echo "                        "
-EIP_INFO=$(aws ec2 allocate-address --region ${REGION} --domain vpc)
-if [ $? -ne 0 ]; then
-  echo "Failed to create an Elastic IP."
-  exit 1
-fi
-echo "Elastic IP is created successfully..."
-ALLOCATION_ID=$(echo $EIP_INFO | jq -r '.AllocationId')
-echo "Elastic-ip id:" $ALLOCATION_ID
-PUBLIC_IP=$(echo $EIP_INFO | jq -r '.PublicIp')
-echo "Public-ip allocated by the elastic-ip:" $PUBLIC_IP
+# # Allocation an elastic ip
+# echo "================LAUNCING AN ELASTIC IP==============="
+# echo "                        "
+# EIP_INFO=$(aws ec2 allocate-address --region ${REGION} --domain vpc)
+# if [ $? -ne 0 ]; then
+#   echo "Failed to create an Elastic IP."
+#   exit 1
+# fi
+# echo "Elastic IP is created successfully..."
+# ALLOCATION_ID=$(echo $EIP_INFO | jq -r '.AllocationId')
+# echo "Elastic-ip id:" $ALLOCATION_ID
+# PUBLIC_IP=$(echo $EIP_INFO | jq -r '.PublicIp')
+# echo "Public-ip allocated by the elastic-ip:" $PUBLIC_IP
 
-# Time taking to come up the instance in running state.
-sleep 30
+# # Time taking to come up the instance in running state.
+# sleep 30
 
-# Associating an Elastic ip to the spot node vm...
-response=$(aws ec2 associate-address --region ${REGION} --instance-id $INSTANCE_ID --allocation-id $ALLOCATION_ID)
-if [ $? -ne 0 ]; then
-  echo "Failed to associate an Elastic IP to the spot node..."
-  exit 1
-fi
-echo "Elastic IP is associated successfully with the vm..."
-echo "                        "
+# # Associating an Elastic ip to the spot node vm...
+# response=$(aws ec2 associate-address --region ${REGION} --instance-id $INSTANCE_ID --allocation-id $ALLOCATION_ID)
+# if [ $? -ne 0 ]; then
+#   echo "Failed to associate an Elastic IP to the spot node..."
+#   exit 1
+# fi
+# echo "Elastic IP is associated successfully with the vm..."
+# echo "                        "
 
-cat << 'EOF' > ./helper.sh
-#!/bin/bash
-sudo snap install microk8s --classic --channel=1.28
-echo "alias kubectl='microk8s kubectl '" >> ~/.bashrc
-echo "alias helm='microk8s helm3 '" >> ~/.bashrc
-source ~/.bashrc
-sudo usermod -a -G microk8s devtron
-sudo chown -f -R devtron ~/.kube
-  newgrp microk8s << END
-    echo "                        "
-    echo "============== ENABLE DNS, STORAGE, HELM3 =========================================="
-    echo "                        "
-    sleep 20
-    microk8s enable dns 
-    microk8s enable storage
-    microk8s enable helm
-    echo "                        "
-    echo "============== CREATING A NAMESPACE devtron-ci, devtron-cd, devtron-demo =========================================="
-    echo "                        "
-    microk8s kubectl create namespace devtron-ci
-    microk8s kubectl create namespace devtron-cd
-    microk8s kubectl create namespace devtron-demo
-curl -O https://raw.githubusercontent.com/devtron-labs/utilities/main/kubeconfig-exporter/kubernetes_export_sa.sh && sed -i 's/kubectl/microk8s kubectl/g' kubernetes_export_sa.sh && bash kubernetes_export_sa.sh cd-user devtroncd > /home/devtron/bearerToken.txt
-exit 0
-EOF
+# cat << 'EOF' > ./helper.sh
+# #!/bin/bash
+# sudo snap install microk8s --classic --channel=1.28
+# echo "alias kubectl='microk8s kubectl '" >> ~/.bashrc
+# echo "alias helm='microk8s helm3 '" >> ~/.bashrc
+# source ~/.bashrc
+# sudo usermod -a -G microk8s devtron
+# sudo chown -f -R devtron ~/.kube
+#   newgrp microk8s << END
+#     echo "                        "
+#     echo "============== ENABLE DNS, STORAGE, HELM3 =========================================="
+#     echo "                        "
+#     sleep 20
+#     microk8s enable dns 
+#     microk8s enable storage
+#     microk8s enable helm
+#     echo "                        "
+#     echo "============== CREATING A NAMESPACE devtron-ci, devtron-cd, devtron-demo =========================================="
+#     echo "                        "
+#     microk8s kubectl create namespace devtron-ci
+#     microk8s kubectl create namespace devtron-cd
+#     microk8s kubectl create namespace devtron-demo
+# curl -O https://raw.githubusercontent.com/devtron-labs/utilities/main/kubeconfig-exporter/kubernetes_export_sa.sh && sed -i 's/kubectl/microk8s kubectl/g' kubernetes_export_sa.sh && bash kubernetes_export_sa.sh cd-user devtroncd > /home/devtron/bearerToken.txt
+# exit 0
+# EOF
 
-echo "============== SETUP AN MICROK8S WITH USER DEVTRON =========================================="
-echo "                        "
+# echo "============== SETUP AN MICROK8S WITH USER DEVTRON =========================================="
+# echo "                        "
 
-sshpass -p "$PASSWORD" scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no helper.sh devtron@$PUBLIC_IP:/home/devtron/
-sshpass -p "$PASSWORD" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no devtron@$PUBLIC_IP 'bash /home/devtron/helper.sh'
+# sshpass -p "$PASSWORD" scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no helper.sh devtron@$PUBLIC_IP:/home/devtron/
+# sshpass -p "$PASSWORD" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no devtron@$PUBLIC_IP 'bash /home/devtron/helper.sh'
 
-echo "Installation Completed successfully ..."
-echo "                        "
+# echo "Installation Completed successfully ..."
+# echo "                        "
 
-# Print devtron user credential 
-echo "========= SSH TO THE VM =========="
-echo "ssh devtron@$PUBLIC_IP" 
-echo "Password: $PASSWORD"
-echo "                        "
-
-
-# Send an alert on the discord channel
-echo "=========SENDING MESSAGE ON DISCORD CHANNEL=========="
-echo "                        "
-JSON='{
-  "content": "``` A virtual machine has been provisioned by the QA team under the username '"$EMAIL_ID"' and its associated with the following security group id: '"$SECURITY_GROUP_ID"' and ElasticIP-ID: '"$ALLOCATION_ID"' ``` "
-}'
-curl -H "Content-Type: application/json" -X POST -d "$JSON" $DISCORD_URL
-
-if [ $? -ne 0 ]; then
-  echo "Failed to send message on discord."
-  exit 1
-fi
-echo "Message sent on discord channel successfully..."
-echo "                        "
+# # Print devtron user credential 
+# echo "========= SSH TO THE VM =========="
+# echo "ssh devtron@$PUBLIC_IP" 
+# echo "Password: $PASSWORD"
+# echo "                        "
 
 
-echo "=========GETTING THE BEARER TOKEN=========="
-echo "                        "
-sshpass -p $PASSWORD scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no devtron@$PUBLIC_IP:/home/devtron/bearerToken.txt .
-bearerToken=$(cat ./bearerToken.txt | grep "TOKEN" | awk -F ' := ' '{print $2}')
-echo "Bearer Token: $bearerToken"
+# # Send an alert on the discord channel
+# echo "=========SENDING MESSAGE ON DISCORD CHANNEL=========="
+# echo "                        "
+# JSON='{
+#   "content": "``` A virtual machine has been provisioned by the QA team under the username '"$EMAIL_ID"' and its associated with the following security group id: '"$SECURITY_GROUP_ID"' and ElasticIP-ID: '"$ALLOCATION_ID"' ``` "
+# }'
+# curl -H "Content-Type: application/json" -X POST -d "$JSON" $DISCORD_URL
+
+# if [ $? -ne 0 ]; then
+#   echo "Failed to send message on discord."
+#   exit 1
+# fi
+# echo "Message sent on discord channel successfully..."
+# echo "                        "
+
+
+# echo "=========GETTING THE BEARER TOKEN=========="
+# echo "                        "
+# sshpass -p $PASSWORD scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no devtron@$PUBLIC_IP:/home/devtron/bearerToken.txt .
+# bearerToken=$(cat ./bearerToken.txt | grep "TOKEN" | awk -F ' := ' '{print $2}')
+# echo "Bearer Token: $bearerToken"
 set -ex
 dashboardUrl=$dashboardUrl
 devtronApiToken=$devtronApiToken
-
+PUBLIC_IP="13.202.162.167"
+bearerToken="eyJhbGciOiJSUzI1NiIsImtpZCI6IjdIdm42Rm5xM05reGZrYnBxeHJQTTRJQXhUR1ZmR294WnZwVmhsTW83VUkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZXZ0cm9uY2QiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiY2QtdXNlciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJjZC11c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiMGQ5MDJjZWEtZjcyYi00ODY3LTk5NjUtNGIzMGY2NTBiNDNjIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmRldnRyb25jZDpjZC11c2VyIn0.oTYtTqcTLLL-yfekGJgdEEHbApVba_b8u1J06n-7w4bKVHxBpIsjkBpiJtLmISuhjVyVvhRPE09r5vQalpdXYCplad-t_yVDG2jbDkGF4IqwhSNPT7s-CfvF7yt_GKI0PBqA6bqI4v-CO0zedw2W6D7qLy7DKuFp3TI-u0uoxTWCjbjX5XY4PKvAC56tXgO7fOxz1RFuckUVI0cIxspZ_aygp8LXIwQIHaKpxeL3w5_AKpoFya47x-mm08i7Y97f9bAG4ux7VhapwWAFeaxsEU6qNMGcLCfm4RKPkwfX0h0oy_aU1j_w-ClpvGDF4uNM3clLuc2ICYK4zqxbgxKK8Q"
 clusterData=$(curl -s "${dashboardUrl}/orchestrator/cluster" -H "token: $devtronApiToken")
 clusterDataStatusCode=$(echo "$clusterData" | jq ".code")
 if [ ! "$clusterData" ] || [ "$clusterDataStatusCode" -ne 200 ]; then
