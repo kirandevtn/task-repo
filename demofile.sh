@@ -1,6 +1,7 @@
 #!/bin/bash
 
 apk add --update --no-cache openssh sshpass                                                                                                                # Replace with your subnet ID
+apk update && apk add bind-tools
 
 TEAM="qa"
 ENVIRONMENT="test"
