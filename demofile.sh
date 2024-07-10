@@ -63,6 +63,7 @@ EOF
 
     # Launch EC2 spot node instance
     INSTANCE_ID=$(aws ec2 run-instances \
+        --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":30}}]' \
         --image-id $AMI_ID \
         --instance-type $INSTANCE_TYPE \
         --key-name $KEY_NAME \
