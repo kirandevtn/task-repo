@@ -14,7 +14,7 @@ aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
 aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 aws configure set region "$REGION"
 
-CONFIG=m5a.large #cpu 2, memory 8    "default config"
+CONFIG=m6a.large #cpu 2, memory 8    "default config"
 if [[ "$VM_CPU" == "4" ]]; then
     CONFIG="m6a.xlarge"             #cpu 4, memory 16
 elif [[ "$size" == "8" ]]; then
