@@ -4,7 +4,7 @@ apk add --update --no-cache openssh sshpass                                     
 apk update && apk add bind-tools
 
 TEAM="qa"
-ENVIRONMENT="test"
+ENVIRONMENT="notprod"
 PROVISIONED_BY="script"
 AUTOSHUTDOWN="true"
 
