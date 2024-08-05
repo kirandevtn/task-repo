@@ -1,0 +1,24 @@
+name: urgent-release-note
+
+# Controls when the workflow will run
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  send_release_note:
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'hotfix-') && github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: tsickert/discord-webhook@v5.3.0
+      with:
+        username: kiran.yadav
+        content: "${{ github.event.pull_request.title }}\n${{ github.event.pull_request.body }}"
+        webhook-url: ${{ secrets.URGENT_DISCORD_URL }}
