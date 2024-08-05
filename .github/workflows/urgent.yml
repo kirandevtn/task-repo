@@ -20,5 +20,5 @@ jobs:
     - uses: tsickert/discord-webhook@v5.3.0
       with:
         username: kiran.yadav
-        content: "Hey <@kiran.yadav>\n${{ github.event.pull_request.title }}\n${{ github.event.pull_request.body }}"
+        content: "Hey <@1190202860399505411>\n${{ github.event.pull_request.title }}\n${{ github.event.pull_request.body }}"
         webhook-url: ${{ secrets.URGENT_DISCORD_URL }}
